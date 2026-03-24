@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ item.title }}</title>
+</head>
+<body>
+    <h1>{{ item.title }}</h1>
+
+    {% if item.image %}
+        <img src="{{ item.image.url }}" alt="{{ item.title }}" width="320">
+    {% endif %}
+
+    <p><strong>Автор:</strong> {{ item.user.username }}</p>
+    <p><strong>Категория:</strong> {{ item.category.name|default:"Не указана" }}</p>
+    <p><strong>Статус:</strong> {{ item.get_status_display }}</p>
+    <p><strong>Оценка:</strong> {{ item.rating }}/5</p>
+    <p><strong>Описание:</strong> {{ item.description }}</p>
+    <p><strong>Создано:</strong> {{ item.created_at }}</p>
+    <p><strong>Обновлено:</strong> {{ item.updated_at }}</p>
+
+    <p><a href="{% url 'tracker:item_list' %}">Назад к списку</a></p>
+</body>
+</html>

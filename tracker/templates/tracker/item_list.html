@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список элементов</title>
+</head>
+<body>
+    <h1>Список элементов</h1>
+
+    {% if items %}
+        <ul>
+            {% for item in items %}
+                <li>
+                    <a href="{% url 'tracker:item_detail' item.pk %}">
+                        {{ item.title }}
+                    </a>
+                    — {{ item.get_status_display }}, оценка: {{ item.rating }}/5
+                    {% if item.category %} ({{ item.category.name }}){% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Пока нет элементов для отображения.</p>
+    {% endif %}
+</body>
+</html>
