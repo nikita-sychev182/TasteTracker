@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Удаление впечатления</title>
+</head>
+<body>
+    <h1>Удаление впечатления</h1>
+    <p>Вы уверены, что хотите удалить «{{ object.title }}»?</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Да, удалить</button>
+    </form>
+
+    <p><a href="{% url 'tracker:item_detail' object.pk %}">Отмена</a></p>
+</body>
+</html>

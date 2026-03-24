@@ -20,6 +20,14 @@
     <p><strong>Создано:</strong> {{ item.created_at }}</p>
     <p><strong>Обновлено:</strong> {{ item.updated_at }}</p>
 
+    {% if request.user.is_authenticated and request.user == item.user %}
+        <p>
+            <a href="{% url 'tracker:item_update' item.pk %}">Редактировать</a>
+            |
+            <a href="{% url 'tracker:item_delete' item.pk %}">Удалить</a>
+        </p>
+    {% endif %}
+
     <p><a href="{% url 'tracker:item_list' %}">Назад к списку</a></p>
 </body>
 </html>

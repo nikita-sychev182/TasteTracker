@@ -7,6 +7,9 @@
 </head>
 <body>
     <h1>Список элементов</h1>
+    {% if request.user.is_authenticated %}
+        <p><a href="{% url 'tracker:item_create' %}">Добавить впечатление</a></p>
+    {% endif %}
 
     {% if items %}
         <ul>
@@ -17,6 +20,10 @@
                     </a>
                     — {{ item.get_status_display }}, оценка: {{ item.rating }}/5
                     {% if item.category %} ({{ item.category.name }}){% endif %}
+                    {% if request.user.is_authenticated and request.user == item.user %}
+                        | <a href="{% url 'tracker:item_update' item.pk %}">Редактировать</a>
+                        | <a href="{% url 'tracker:item_delete' item.pk %}">Удалить</a>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
