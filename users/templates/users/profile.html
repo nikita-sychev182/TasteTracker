@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль {{ profile_user.username }}</title>
+</head>
+<body>
+    <h1>Профиль: {{ profile_user.username }}</h1>
+
+    {% if profile_user.avatar %}
+        <img src="{{ profile_user.avatar.url }}" alt="Аватар {{ profile_user.username }}" width="180">
+    {% else %}
+        <p>Аватар не загружен.</p>
+    {% endif %}
+
+    <p><strong>Имя:</strong> {{ profile_user.first_name|default:"-" }}</p>
+    <p><strong>Фамилия:</strong> {{ profile_user.last_name|default:"-" }}</p>
+    <p><strong>Email:</strong> {{ profile_user.email|default:"-" }}</p>
+    <p><strong>О себе:</strong> {{ profile_user.bio|default:"Пока ничего не добавлено." }}</p>
+
+    {% if request.user.is_authenticated and request.user.username == profile_user.username %}
+        <p><a href="{% url 'users:profile_edit' %}">Редактировать профиль</a></p>
+    {% endif %}
+</body>
+</html>
