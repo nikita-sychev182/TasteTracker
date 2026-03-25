@@ -1,80 +1,110 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Список элементов</title>
-    <style>
-        .star { font-size: 18px; }
-        .filled { color: #f5c518; }
-        .empty { color: #cccccc; }
-    </style>
-</head>
-<body>
-    <h1>Список элементов</h1>
-    {% if request.user.is_authenticated %}
-        <p><a href="{% url 'tracker:item_create' %}">Добавить впечатление</a></p>
-    {% endif %}
+{% extends "base.html" %}
 
-    <nav>
-        <p>Фильтр по статусу:</p>
-        <p>
-            {% if request.GET.status == "want" %}
-                <strong>Хочу посетить</strong>
-            {% else %}
-                <a href="{{ request.path }}?status=want">Хочу посетить</a>
-            {% endif %}
-            |
-            {% if request.GET.status == "done" %}
-                <strong>Посетил</strong>
-            {% else %}
-                <a href="{{ request.path }}?status=done">Посетил</a>
-            {% endif %}
-            |
-            {% if request.GET.status == "favorite" %}
-                <strong>В избранном</strong>
-            {% else %}
-                <a href="{{ request.path }}?status=favorite">В избранном</a>
-            {% endif %}
-        </p>
-    </nav>
+{% block title %}Список элементов{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Список элементов</h1>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="mb-2 fw-semibold">Фильтр по статусу</div>
+            <div class="btn-group" role="group" aria-label="Фильтр по статусу">
+                <a
+                    class="btn btn-sm btn-outline-primary {% if request.GET.status == 'want' %}active{% endif %}"
+                    href="{{ request.path }}?status=want"
+                >
+                    Хочу посетить
+                </a>
+                <a
+                    class="btn btn-sm btn-outline-primary {% if request.GET.status == 'done' %}active{% endif %}"
+                    href="{{ request.path }}?status=done"
+                >
+                    Посетил
+                </a>
+                <a
+                    class="btn btn-sm btn-outline-primary {% if request.GET.status == 'favorite' %}active{% endif %}"
+                    href="{{ request.path }}?status=favorite"
+                >
+                    В избранном
+                </a>
+                {% if request.GET.status %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ request.path }}">Сбросить</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
     {% if items %}
-        <ul>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             {% for item in items %}
-                <li>
-                    <a href="{% url 'tracker:item_detail' item.pk %}">
-                        {{ item.title }}
-                    </a>
-                    — {{ item.get_status_display }}, оценка:
-                    <span class="stars" aria-label="Рейтинг {{ item.rating }}/5">
-                        <span class="star {% if item.rating >= 1 %}filled{% else %}empty{% endif %}">
-                            {% if item.rating >= 1 %}★{% else %}☆{% endif %}
-                        </span>
-                        <span class="star {% if item.rating >= 2 %}filled{% else %}empty{% endif %}">
-                            {% if item.rating >= 2 %}★{% else %}☆{% endif %}
-                        </span>
-                        <span class="star {% if item.rating >= 3 %}filled{% else %}empty{% endif %}">
-                            {% if item.rating >= 3 %}★{% else %}☆{% endif %}
-                        </span>
-                        <span class="star {% if item.rating >= 4 %}filled{% else %}empty{% endif %}">
-                            {% if item.rating >= 4 %}★{% else %}☆{% endif %}
-                        </span>
-                        <span class="star {% if item.rating >= 5 %}filled{% else %}empty{% endif %}">
-                            {% if item.rating >= 5 %}★{% else %}☆{% endif %}
-                        </span>
-                        <span> ({{ item.rating }}/5)</span>
-                    </span>
-                    {% if item.category %} ({{ item.category.name }}){% endif %}
-                    {% if request.user.is_authenticated and request.user == item.user %}
-                        | <a href="{% url 'tracker:item_update' item.pk %}">Редактировать</a>
-                        | <a href="{% url 'tracker:item_delete' item.pk %}">Удалить</a>
-                    {% endif %}
-                </li>
+                <div class="col">
+                    <div class="card h-100">
+                        {% if item.image %}
+                            <img
+                                src="{{ item.image.url }}"
+                                class="card-img-top"
+                                alt="{{ item.title }}"
+                                style="height: 200px; object-fit: cover;"
+                            >
+                        {% endif %}
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">
+                                <a href="{% url 'tracker:item_detail' item.pk %}">
+                                    {{ item.title }}
+                                </a>
+                            </h5>
+
+                            <p class="text-muted mb-2">{{ item.get_status_display }}</p>
+
+                            <div class="mb-2" aria-label="Рейтинг {{ item.rating }}/5">
+                                <span class="stars">
+                                    <span class="star {% if item.rating >= 1 %}filled{% else %}empty{% endif %}">
+                                        {% if item.rating >= 1 %}★{% else %}☆{% endif %}
+                                    </span>
+                                    <span class="star {% if item.rating >= 2 %}filled{% else %}empty{% endif %}">
+                                        {% if item.rating >= 2 %}★{% else %}☆{% endif %}
+                                    </span>
+                                    <span class="star {% if item.rating >= 3 %}filled{% else %}empty{% endif %}">
+                                        {% if item.rating >= 3 %}★{% else %}☆{% endif %}
+                                    </span>
+                                    <span class="star {% if item.rating >= 4 %}filled{% else %}empty{% endif %}">
+                                        {% if item.rating >= 4 %}★{% else %}☆{% endif %}
+                                    </span>
+                                    <span class="star {% if item.rating >= 5 %}filled{% else %}empty{% endif %}">
+                                        {% if item.rating >= 5 %}★{% else %}☆{% endif %}
+                                    </span>
+                                    <span class="text-muted"> ({{ item.rating }}/5)</span>
+                                </span>
+                            </div>
+
+                            {% if item.category %}
+                                <div class="text-muted mb-2">Категория: {{ item.category.name }}</div>
+                            {% endif %}
+
+                            <div class="mt-auto d-flex gap-2">
+                                {% if request.user.is_authenticated and request.user == item.user %}
+                                    <a class="btn btn-sm btn-outline-primary" href="{% url 'tracker:item_update' item.pk %}">
+                                        Редактировать
+                                    </a>
+                                    <a class="btn btn-sm btn-outline-danger" href="{% url 'tracker:item_delete' item.pk %}">
+                                        Удалить
+                                    </a>
+                                {% endif %}
+                                <a class="btn btn-sm btn-primary ms-auto" href="{% url 'tracker:item_detail' item.pk %}">
+                                    Подробнее
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             {% endfor %}
-        </ul>
+        </div>
     {% else %}
-        <p>Пока нет элементов для отображения.</p>
+        <div class="alert alert-secondary">
+            Пока нет элементов для отображения.
+        </div>
     {% endif %}
-</body>
-</html>
+{% endblock %}

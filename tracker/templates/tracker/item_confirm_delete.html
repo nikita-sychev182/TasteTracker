@@ -1,19 +1,24 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Удаление впечатления</title>
-</head>
-<body>
-    <h1>Удаление впечатления</h1>
-    <p>Вы уверены, что хотите удалить «{{ object.title }}»?</p>
+{% extends "base.html" %}
 
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit">Да, удалить</button>
-    </form>
+{% block title %}Удаление впечатления{% endblock %}
 
-    <p><a href="{% url 'tracker:item_detail' object.pk %}">Отмена</a></p>
-</body>
-</html>
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h1 class="h3 mb-3">Удаление впечатления</h1>
+                    <p class="mb-4">Вы уверены, что хотите удалить «{{ object.title }}»?</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-danger" type="submit">Да, удалить</button>
+                            <a class="btn btn-outline-secondary" href="{% url 'tracker:item_detail' object.pk %}">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

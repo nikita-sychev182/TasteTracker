@@ -1,23 +1,29 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        {% if object %}Редактирование впечатления{% else %}Новое впечатление{% endif %}
-    </title>
-</head>
-<body>
-    <h1>
-        {% if object %}Редактирование впечатления{% else %}Добавление впечатления{% endif %}
-    </h1>
+{% extends "base.html" %}
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Сохранить</button>
-    </form>
+{% block title %}
+    {% if object %}Редактирование впечатления{% else %}Новое впечатление{% endif %}
+{% endblock %}
 
-    <p><a href="{% url 'tracker:item_list' %}">Назад к списку</a></p>
-</body>
-</html>
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="h3 mb-3">
+                        {% if object %}Редактирование впечатления{% else %}Добавление впечатления{% endif %}
+                    </h1>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button class="btn btn-primary" type="submit">Сохранить</button>
+                    </form>
+
+                    <div class="mt-3">
+                        <a class="btn btn-sm btn-secondary" href="{% url 'tracker:item_list' %}">Назад к списку</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,69 +1,94 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ item.title }}</title>
-    <style>
-        .star { font-size: 22px; }
-        .filled { color: #f5c518; }
-        .empty { color: #cccccc; }
-        .clickable { cursor: pointer; }
-    </style>
-</head>
-<body>
-    <h1>{{ item.title }}</h1>
+{% extends "base.html" %}
 
-    {% if item.image %}
-        <img src="{{ item.image.url }}" alt="{{ item.title }}" width="320">
-    {% endif %}
+{% block title %}{{ item.title }}{% endblock %}
 
-    <p><strong>Автор:</strong> {{ item.user.username }}</p>
-    <p><strong>Категория:</strong> {{ item.category.name|default:"Не указана" }}</p>
-    <p><strong>Статус:</strong> {{ item.get_status_display }}</p>
-    <p><strong>Оценка:</strong>
-        <span class="rating-number">{{ item.rating }}</span>/5
-        <span class="stars rating-widget"
-              data-item-pk="{{ item.pk }}"
-              {% if request.user.is_authenticated and request.user == item.user %}
-                  data-rate-url="{% url 'tracker:item_rate' item.pk %}"
-              {% endif %}>
-            <span class="star {% if item.rating >= 1 %}filled{% else %}empty{% endif %}{% if request.user.is_authenticated and request.user == item.user %} clickable{% endif %}"
-                  {% if request.user.is_authenticated and request.user == item.user %}data-rating="1"{% endif %}>
-                {% if item.rating >= 1 %}★{% else %}☆{% endif %}
-            </span>
-            <span class="star {% if item.rating >= 2 %}filled{% else %}empty{% endif %}{% if request.user.is_authenticated and request.user == item.user %} clickable{% endif %}"
-                  {% if request.user.is_authenticated and request.user == item.user %}data-rating="2"{% endif %}>
-                {% if item.rating >= 2 %}★{% else %}☆{% endif %}
-            </span>
-            <span class="star {% if item.rating >= 3 %}filled{% else %}empty{% endif %}{% if request.user.is_authenticated and request.user == item.user %} clickable{% endif %}"
-                  {% if request.user.is_authenticated and request.user == item.user %}data-rating="3"{% endif %}>
-                {% if item.rating >= 3 %}★{% else %}☆{% endif %}
-            </span>
-            <span class="star {% if item.rating >= 4 %}filled{% else %}empty{% endif %}{% if request.user.is_authenticated and request.user == item.user %} clickable{% endif %}"
-                  {% if request.user.is_authenticated and request.user == item.user %}data-rating="4"{% endif %}>
-                {% if item.rating >= 4 %}★{% else %}☆{% endif %}
-            </span>
-            <span class="star {% if item.rating >= 5 %}filled{% else %}empty{% endif %}{% if request.user.is_authenticated and request.user == item.user %} clickable{% endif %}"
-                  {% if request.user.is_authenticated and request.user == item.user %}data-rating="5"{% endif %}>
-                {% if item.rating >= 5 %}★{% else %}☆{% endif %}
-            </span>
-        </span>
-    </p>
-    <p><strong>Описание:</strong> {{ item.description }}</p>
-    <p><strong>Создано:</strong> {{ item.created_at }}</p>
-    <p><strong>Обновлено:</strong> {{ item.updated_at }}</p>
+{% block content %}
+    <div class="row g-4">
+        <div class="col-12 col-md-5">
+            <div class="card">
+                <div class="card-body">
+                    {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.title }}" class="img-fluid rounded">
+                    {% else %}
+                        <div class="text-muted">Изображение отсутствует.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
-    {% if request.user.is_authenticated and request.user == item.user %}
-        <p>
-            <a href="{% url 'tracker:item_update' item.pk %}">Редактировать</a>
-            |
-            <a href="{% url 'tracker:item_delete' item.pk %}">Удалить</a>
-        </p>
-    {% endif %}
+        <div class="col-12 col-md-7">
+            <h1 class="h3 mb-3">{{ item.title }}</h1>
 
-    <p><a href="{% url 'tracker:item_list' %}">Назад к списку</a></p>
+            <ul class="list-group list-group-flush mb-3">
+                <li class="list-group-item"><strong>Автор:</strong> {{ item.user.username }}</li>
+                <li class="list-group-item"><strong>Категория:</strong> {{ item.category.name|default:"Не указана" }}</li>
+                <li class="list-group-item"><strong>Статус:</strong> {{ item.get_status_display }}</li>
+            </ul>
 
+            <div class="mb-3">
+                <div class="fw-semibold mb-1">Оценка</div>
+                <div class="mb-2">
+                    <span class="rating-number">{{ item.rating }}</span>/5
+                </div>
+                <div class="rating-stars">
+                    <span class="stars rating-widget"
+                          data-item-pk="{{ item.pk }}"
+                          {% if request.user.is_authenticated and request.user == item.user %}
+                              data-rate-url="{% url 'tracker:item_rate' item.pk %}"
+                          {% endif %}>
+                        <span class="star {% if item.rating >= 1 %}filled{% else %}empty{% endif %}{% if request.user.is_authenticated and request.user == item.user %} clickable{% endif %}"
+                              {% if request.user.is_authenticated and request.user == item.user %}data-rating="1"{% endif %}>
+                            {% if item.rating >= 1 %}★{% else %}☆{% endif %}
+                        </span>
+                        <span class="star {% if item.rating >= 2 %}filled{% else %}empty{% endif %}{% if request.user.is_authenticated and request.user == item.user %} clickable{% endif %}"
+                              {% if request.user.is_authenticated and request.user == item.user %}data-rating="2"{% endif %}>
+                            {% if item.rating >= 2 %}★{% else %}☆{% endif %}
+                        </span>
+                        <span class="star {% if item.rating >= 3 %}filled{% else %}empty{% endif %}{% if request.user.is_authenticated and request.user == item.user %} clickable{% endif %}"
+                              {% if request.user.is_authenticated and request.user == item.user %}data-rating="3"{% endif %}>
+                            {% if item.rating >= 3 %}★{% else %}☆{% endif %}
+                        </span>
+                        <span class="star {% if item.rating >= 4 %}filled{% else %}empty{% endif %}{% if request.user.is_authenticated and request.user == item.user %} clickable{% endif %}"
+                              {% if request.user.is_authenticated and request.user == item.user %}data-rating="4"{% endif %}>
+                            {% if item.rating >= 4 %}★{% else %}☆{% endif %}
+                        </span>
+                        <span class="star {% if item.rating >= 5 %}filled{% else %}empty{% endif %}{% if request.user.is_authenticated and request.user == item.user %} clickable{% endif %}"
+                              {% if request.user.is_authenticated and request.user == item.user %}data-rating="5"{% endif %}>
+                            {% if item.rating >= 5 %}★{% else %}☆{% endif %}
+                        </span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="fw-semibold mb-1">Описание</div>
+                <div class="border rounded p-3 bg-light">{{ item.description }}</div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-12 col-md-6">
+                    <div class="text-muted"><strong>Создано:</strong></div>
+                    <div>{{ item.created_at }}</div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="text-muted"><strong>Обновлено:</strong></div>
+                    <div>{{ item.updated_at }}</div>
+                </div>
+            </div>
+
+            {% if request.user.is_authenticated and request.user == item.user %}
+                <div class="d-flex gap-2 mb-3">
+                    <a class="btn btn-outline-primary" href="{% url 'tracker:item_update' item.pk %}">Редактировать</a>
+                    <a class="btn btn-outline-danger" href="{% url 'tracker:item_delete' item.pk %}">Удалить</a>
+                </div>
+            {% endif %}
+
+            <a class="btn btn-sm btn-secondary" href="{% url 'tracker:item_list' %}">Назад к списку</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
     <script>
         function getCookie(name) {
             let cookieValue = null;
@@ -129,5 +154,4 @@
             });
         })();
     </script>
-</body>
-</html>
+{% endblock %}

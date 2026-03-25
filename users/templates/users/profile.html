@@ -1,26 +1,48 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профиль {{ profile_user.username }}</title>
-</head>
-<body>
-    <h1>Профиль: {{ profile_user.username }}</h1>
+{% extends "base.html" %}
 
-    {% if profile_user.avatar %}
-        <img src="{{ profile_user.avatar.url }}" alt="Аватар {{ profile_user.username }}" width="180">
-    {% else %}
-        <p>Аватар не загружен.</p>
-    {% endif %}
+{% block title %}Профиль {{ profile_user.username }}{% endblock %}
 
-    <p><strong>Имя:</strong> {{ profile_user.first_name|default:"-" }}</p>
-    <p><strong>Фамилия:</strong> {{ profile_user.last_name|default:"-" }}</p>
-    <p><strong>Email:</strong> {{ profile_user.email|default:"-" }}</p>
-    <p><strong>О себе:</strong> {{ profile_user.bio|default:"Пока ничего не добавлено." }}</p>
+{% block content %}
+    <div class="row g-4">
+        <div class="col-12 col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h2 class="h4 mb-3">Профиль: {{ profile_user.username }}</h2>
 
-    {% if request.user.is_authenticated and request.user.username == profile_user.username %}
-        <p><a href="{% url 'users:profile_edit' %}">Редактировать профиль</a></p>
-    {% endif %}
-</body>
-</html>
+                    {% if profile_user.avatar %}
+                        <img
+                            src="{{ profile_user.avatar.url }}"
+                            alt="Аватар {{ profile_user.username }}"
+                            class="img-fluid rounded-circle mb-3"
+                            style="max-width: 180px;"
+                        >
+                    {% else %}
+                        <div class="text-muted mb-3">Аватар не загружен</div>
+                    {% endif %}
+
+                    {% if request.user.is_authenticated and request.user.username == profile_user.username %}
+                        <a class="btn btn-primary" href="{% url 'users:profile_edit' %}">
+                            Редактировать профиль
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item"><strong>Имя:</strong> {{ profile_user.first_name|default:"-" }}</div>
+                        <div class="list-group-item"><strong>Фамилия:</strong> {{ profile_user.last_name|default:"-" }}</div>
+                        <div class="list-group-item"><strong>Email:</strong> {{ profile_user.email|default:"-" }}</div>
+                        <div class="list-group-item">
+                            <strong>О себе:</strong>
+                            {{ profile_user.bio|default:"Пока ничего не добавлено." }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
