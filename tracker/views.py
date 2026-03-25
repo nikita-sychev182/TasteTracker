@@ -17,7 +17,10 @@ class ItemListView(ListView):
             .order_by("-created_at")
         )
         if self.request.user.is_authenticated:
-            return queryset.filter(user=self.request.user)
+            queryset = queryset.filter(user=self.request.user)
+        status = self.request.GET.get("status")
+        if status in {"want", "done", "favorite"}:
+            queryset = queryset.filter(status=status)
         return queryset
 
 

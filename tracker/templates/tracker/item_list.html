@@ -11,6 +11,29 @@
         <p><a href="{% url 'tracker:item_create' %}">Добавить впечатление</a></p>
     {% endif %}
 
+    <nav>
+        <p>Фильтр по статусу:</p>
+        <p>
+            {% if request.GET.status == "want" %}
+                <strong>Хочу посетить</strong>
+            {% else %}
+                <a href="{{ request.path }}?status=want">Хочу посетить</a>
+            {% endif %}
+            |
+            {% if request.GET.status == "done" %}
+                <strong>Посетил</strong>
+            {% else %}
+                <a href="{{ request.path }}?status=done">Посетил</a>
+            {% endif %}
+            |
+            {% if request.GET.status == "favorite" %}
+                <strong>В избранном</strong>
+            {% else %}
+                <a href="{{ request.path }}?status=favorite">В избранном</a>
+            {% endif %}
+        </p>
+    </nav>
+
     {% if items %}
         <ul>
             {% for item in items %}
