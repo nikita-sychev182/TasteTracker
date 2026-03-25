@@ -1,5 +1,9 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from tracker.forms import ItemForm
@@ -64,4 +68,22 @@ class ItemDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         return Item.objects.filter(user=self.request.user)
+
+
+@login_required
+@require_POST
+def item_rate_view(request, pk: int):
+    item = get_object_or_404(Item, pk=pk, user=request.user)
+    rating_raw = request.POST.get("rating")
+    try:
+        rating = int(rating_raw)
+    except (TypeError, ValueError):
+        return JsonResponse({"error": "invalid_rating"}, status=400)
+
+    if rating < 1 or rating > 5:
+        return JsonResponse({"error": "invalid_rating"}, status=400)
+
+    item.rating = rating
+    item.save(update_fields=["rating"])
+    return JsonResponse({"rating": item.rating})
 

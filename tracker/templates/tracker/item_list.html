@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Список элементов</title>
+    <style>
+        .star { font-size: 18px; }
+        .filled { color: #f5c518; }
+        .empty { color: #cccccc; }
+    </style>
 </head>
 <body>
     <h1>Список элементов</h1>
@@ -41,7 +46,25 @@
                     <a href="{% url 'tracker:item_detail' item.pk %}">
                         {{ item.title }}
                     </a>
-                    — {{ item.get_status_display }}, оценка: {{ item.rating }}/5
+                    — {{ item.get_status_display }}, оценка:
+                    <span class="stars" aria-label="Рейтинг {{ item.rating }}/5">
+                        <span class="star {% if item.rating >= 1 %}filled{% else %}empty{% endif %}">
+                            {% if item.rating >= 1 %}★{% else %}☆{% endif %}
+                        </span>
+                        <span class="star {% if item.rating >= 2 %}filled{% else %}empty{% endif %}">
+                            {% if item.rating >= 2 %}★{% else %}☆{% endif %}
+                        </span>
+                        <span class="star {% if item.rating >= 3 %}filled{% else %}empty{% endif %}">
+                            {% if item.rating >= 3 %}★{% else %}☆{% endif %}
+                        </span>
+                        <span class="star {% if item.rating >= 4 %}filled{% else %}empty{% endif %}">
+                            {% if item.rating >= 4 %}★{% else %}☆{% endif %}
+                        </span>
+                        <span class="star {% if item.rating >= 5 %}filled{% else %}empty{% endif %}">
+                            {% if item.rating >= 5 %}★{% else %}☆{% endif %}
+                        </span>
+                        <span> ({{ item.rating }}/5)</span>
+                    </span>
                     {% if item.category %} ({{ item.category.name }}){% endif %}
                     {% if request.user.is_authenticated and request.user == item.user %}
                         | <a href="{% url 'tracker:item_update' item.pk %}">Редактировать</a>
