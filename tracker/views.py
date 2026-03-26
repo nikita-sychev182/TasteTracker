@@ -25,7 +25,11 @@ class ItemListView(ListView):
             Item.objects.select_related("user", "category")
             .order_by("-created_at")
         )
-        if self.request.user.is_authenticated:
+
+        # Проверка режима "Мои впечатления"
+        if self.request.GET.get("my") and self.request.user.is_authenticated:
+            queryset = queryset.filter(user=self.request.user)
+        elif self.request.user.is_authenticated:
             # Показываем публичные элементы ИЛИ элементы текущего пользователя
             queryset = queryset.filter(
                 models.Q(is_public=True) | models.Q(user=self.request.user)
@@ -33,15 +37,31 @@ class ItemListView(ListView):
         else:
             # Анонимным пользователям показываем только публичные элементы
             queryset = queryset.filter(is_public=True)
-        status = self.request.GET.get("status")
-        if status in {"want", "done", "favorite"}:
-            queryset = queryset.filter(status=status)
+
+        # Фильтр по категории (только на главной, не в "Мои впечатления")
+        category = self.request.GET.get("category")
+        if category and not self.request.GET.get("my"):
+            queryset = queryset.filter(category__name=category)
+
+        # Фильтр по статусу (только в "Мои впечатления")
+        if self.request.GET.get("my"):
+            status = self.request.GET.get("status")
+            if status in {"want", "done", "favorite"}:
+                queryset = queryset.filter(status=status)
 
         search_query = self.request.GET.get("search")
         if search_query:
             queryset = queryset.filter(title__icontains=search_query)
 
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Добавляем категории только для главной страницы (не "Мои впечатления")
+        if not self.request.GET.get("my"):
+            from tracker.models import Category
+            context["categories"] = Category.objects.all().order_by("name")
+        return context
 
 
 class ItemDetailView(DetailView):
@@ -118,7 +138,10 @@ def load_more_items(request):
        .order_by("-created_at")
    )
 
-   if request.user.is_authenticated:
+   # Проверка режима "Мои впечатления"
+   if request.GET.get("my") and request.user.is_authenticated:
+       queryset = queryset.filter(user=request.user)
+   elif request.user.is_authenticated:
        # Показываем публичные элементы ИЛИ элементы текущего пользователя
        queryset = queryset.filter(
            models.Q(is_public=True) | models.Q(user=request.user)
@@ -127,9 +150,16 @@ def load_more_items(request):
        # Анонимным пользователям показываем только публичные элементы
        queryset = queryset.filter(is_public=True)
 
-   status = request.GET.get("status")
-   if status in {"want", "done", "favorite"}:
-       queryset = queryset.filter(status=status)
+   # Фильтр по категории (только на главной, не в "Мои впечатления")
+   category = request.GET.get("category")
+   if category and not request.GET.get("my"):
+       queryset = queryset.filter(category__name=category)
+
+   # Фильтр по статусу (только в "Мои впечатления")
+   if request.GET.get("my"):
+       status = request.GET.get("status")
+       if status in {"want", "done", "favorite"}:
+           queryset = queryset.filter(status=status)
 
    search_query = request.GET.get("search")
    if search_query:
@@ -148,6 +178,7 @@ def load_more_items(request):
            'status': item.get_status_display(),
            'rating': item.rating,
            'category': item.category.name if item.category else None,
+           'category_icon': item.category.name.split(' ')[0] if item.category and ' ' in item.category.name else None,
            'image': item.image.url if item.image else None,
            'url': f"/tracker/{item.pk}/",
            'update_url': f"/tracker/{item.pk}/edit/",
