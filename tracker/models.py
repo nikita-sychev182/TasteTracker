@@ -56,6 +56,11 @@ class Item(models.Model):
         choices=StatusChoices.choices,
         verbose_name="Статус",
     )
+    is_public = models.BooleanField(
+        default=True,
+        verbose_name="Публичное",
+        help_text="Если отмечено, впечатление видно всем пользователям. Если нет — только вам.",
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создано")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлено")
 

@@ -6,7 +6,7 @@ from tracker.models import Item
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ("category", "title", "description", "image", "rating", "status")
+        fields = ("category", "title", "description", "image", "rating", "status", "is_public")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,5 +19,5 @@ class ItemForm(forms.ModelForm):
                 field.widget.attrs.update({"class": "form-control"})
             elif name == "description":
                 field.widget.attrs.update({"class": "form-control", "rows": 4})
-            else:
-                field.widget.attrs.update({"class": "form-control"})
+            elif name == "is_public":
+                field.widget.attrs.update({"class": "form-check-input"})

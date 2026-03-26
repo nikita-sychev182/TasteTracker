@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.db import models
 from django.db.models import Q
 from urllib.parse import unquote
 
@@ -25,15 +26,21 @@ class ItemListView(ListView):
             .order_by("-created_at")
         )
         if self.request.user.is_authenticated:
-            queryset = queryset.filter(user=self.request.user)
+            # Показываем публичные элементы ИЛИ элементы текущего пользователя
+            queryset = queryset.filter(
+                models.Q(is_public=True) | models.Q(user=self.request.user)
+            )
+        else:
+            # Анонимным пользователям показываем только публичные элементы
+            queryset = queryset.filter(is_public=True)
         status = self.request.GET.get("status")
         if status in {"want", "done", "favorite"}:
             queryset = queryset.filter(status=status)
-        
+
         search_query = self.request.GET.get("search")
         if search_query:
             queryset = queryset.filter(title__icontains=search_query)
-        
+
         return queryset
 
 
@@ -45,8 +52,11 @@ class ItemDetailView(DetailView):
     def get_queryset(self):
         queryset = Item.objects.select_related("user", "category")
         if self.request.user.is_authenticated:
-            return queryset.filter(user=self.request.user)
-        return queryset
+            # Показываем публичные элементы ИЛИ элементы текущего пользователя
+            return queryset.filter(
+                models.Q(is_public=True) | models.Q(user=self.request.user)
+            )
+        return queryset.filter(is_public=True)
 
 
 class ItemCreateView(LoginRequiredMixin, CreateView):
@@ -109,7 +119,13 @@ def load_more_items(request):
    )
 
    if request.user.is_authenticated:
-       queryset = queryset.filter(user=request.user)
+       # Показываем публичные элементы ИЛИ элементы текущего пользователя
+       queryset = queryset.filter(
+           models.Q(is_public=True) | models.Q(user=request.user)
+       )
+   else:
+       # Анонимным пользователям показываем только публичные элементы
+       queryset = queryset.filter(is_public=True)
 
    status = request.GET.get("status")
    if status in {"want", "done", "favorite"}:
@@ -136,6 +152,7 @@ def load_more_items(request):
            'url': f"/tracker/{item.pk}/",
            'update_url': f"/tracker/{item.pk}/edit/",
            'delete_url': f"/tracker/{item.pk}/delete/",
+           'is_owner': request.user.is_authenticated and request.user == item.user,
        })
 
    # Определяем, есть ли еще элементы для загрузки

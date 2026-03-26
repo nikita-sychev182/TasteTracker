@@ -51,11 +51,20 @@
                         {% endif %}
 
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">
-                                <a href="{% url 'tracker:item_detail' item.pk %}">
-                                    {{ item.title }}
-                                </a>
-                            </h5>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">
+                                    <a href="{% url 'tracker:item_detail' item.pk %}">
+                                        {{ item.title }}
+                                    </a>
+                                </h5>
+                                {% if request.user.is_authenticated and request.user == item.user %}
+                                    {% if item.is_public %}
+                                        <span class="badge bg-success" title="Публичное">🌍</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary" title="Приватное">🔒</span>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
 
                             <p class="text-muted mb-2">{{ item.get_status_display }}</p>
 
@@ -157,9 +166,11 @@
              const loadMoreBtn = document.getElementById('load-more-btn');
              const paginationNav = document.getElementById('pagination-nav');
              const itemsContainer = document.querySelector('.row.row-cols-1.row-cols-md-2');
+             const loadMoreUrl = "{% url 'tracker:load_more_items' %}";
 
              console.log('Load more button:', loadMoreBtn);
              console.log('Items container:', itemsContainer);
+             console.log('Load more URL:', loadMoreUrl);
 
              // Build base URL params for pagination links
              function buildParams(page, search, status) {
@@ -212,7 +223,7 @@
 
                      console.log('Fetching:', fetchParams.toString());
 
-                     fetch(`/items/load-more/?${fetchParams.toString()}`, {
+                     fetch(`${loadMoreUrl}?${fetchParams.toString()}`, {
                          headers: {
                              'X-Requested-With': 'XMLHttpRequest',
                              'X-CSRFToken': getCookie('csrftoken')
@@ -235,11 +246,18 @@
                                              ${item.image ? '<img src="' + item.image + '" class="card-img-top" alt="' + item.title + '" style="height: 200px; object-fit: cover;">' : ''}
 
                                              <div class="card-body d-flex flex-column">
-                                                 <h5 class="card-title">
-                                                     <a href="${item.url}">
-                                                         ${item.title}
-                                                     </a>
-                                                 </h5>
+                                                 <div class="d-flex justify-content-between align-items-start mb-2">
+                                                     <h5 class="card-title mb-0">
+                                                         <a href="${item.url}">
+                                                             ${item.title}
+                                                         </a>
+                                                     </h5>
+                                                     ${item.is_owner ? `
+                                                         <span class="badge ${item.is_public ? 'bg-success' : 'bg-secondary'}" title="${item.is_public ? 'Публичное' : 'Приватное'}">
+                                                             ${item.is_public ? '🌍' : '🔒'}
+                                                         </span>
+                                                     ` : ''}
+                                                 </div>
 
                                                  <p class="text-muted mb-2">${item.status}</p>
 
