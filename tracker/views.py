@@ -25,6 +25,11 @@ class ItemListView(ListView):
         status = self.request.GET.get("status")
         if status in {"want", "done", "favorite"}:
             queryset = queryset.filter(status=status)
+        
+        search_query = self.request.GET.get("search")
+        if search_query:
+            queryset = queryset.filter(title__icontains=search_query)
+        
         return queryset
 
 

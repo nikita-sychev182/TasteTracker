@@ -13,24 +13,24 @@
             <div class="btn-group" role="group" aria-label="Фильтр по статусу">
                 <a
                     class="btn btn-sm btn-outline-primary {% if request.GET.status == 'want' %}active{% endif %}"
-                    href="{{ request.path }}?status=want"
+                    href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}status=want"
                 >
                     Хочу посетить
                 </a>
                 <a
                     class="btn btn-sm btn-outline-primary {% if request.GET.status == 'done' %}active{% endif %}"
-                    href="{{ request.path }}?status=done"
+                    href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}status=done"
                 >
                     Посетил
                 </a>
                 <a
                     class="btn btn-sm btn-outline-primary {% if request.GET.status == 'favorite' %}active{% endif %}"
-                    href="{{ request.path }}?status=favorite"
+                    href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}status=favorite"
                 >
                     В избранном
                 </a>
-                {% if request.GET.status %}
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ request.path }}">Сбросить</a>
+                {% if request.GET.status or request.GET.search %}
+                    <a class="btn btn-sm btn-outline-secondary" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}{% endif %}">Сбросить</a>
                 {% endif %}
             </div>
         </div>
