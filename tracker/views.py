@@ -5,6 +5,8 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.db.models import Q
+from urllib.parse import unquote
 
 from tracker.forms import ItemForm
 from tracker.models import Item
@@ -14,6 +16,8 @@ class ItemListView(ListView):
     model = Item
     template_name = "tracker/item_list.html"
     context_object_name = "items"
+    paginate_by = 9
+    paginate_orphans = 0
 
     def get_queryset(self):
         queryset = (
@@ -91,4 +95,55 @@ def item_rate_view(request, pk: int):
     item.rating = rating
     item.save(update_fields=["rating"])
     return JsonResponse({"rating": item.rating})
+
+
+def load_more_items(request):
+   """AJAX-эндпоинт для загрузки дополнительных элементов"""
+   page = int(request.GET.get('page', 1))
+   offset = (page - 1) * 9  # 9 элементов на страницу
+
+   # Получаем базовый queryset из ItemListView
+   queryset = (
+       Item.objects.select_related("user", "category")
+       .order_by("-created_at")
+   )
+
+   if request.user.is_authenticated:
+       queryset = queryset.filter(user=request.user)
+
+   status = request.GET.get("status")
+   if status in {"want", "done", "favorite"}:
+       queryset = queryset.filter(status=status)
+
+   search_query = request.GET.get("search")
+   if search_query:
+       # URL-decode the search query
+       search_query = unquote(search_query)
+       queryset = queryset.filter(title__icontains=search_query)
+
+   # Получаем 9 дополнительных элементов начиная с offset
+   items = queryset[offset:offset + 9]
+
+   items_data = []
+   for item in items:
+       items_data.append({
+           'id': item.id,
+           'title': item.title,
+           'status': item.get_status_display(),
+           'rating': item.rating,
+           'category': item.category.name if item.category else None,
+           'image': item.image.url if item.image else None,
+           'url': f"/tracker/{item.pk}/",
+           'update_url': f"/tracker/{item.pk}/edit/",
+           'delete_url': f"/tracker/{item.pk}/delete/",
+       })
+
+   # Определяем, есть ли еще элементы для загрузки
+   has_next = queryset.count() > offset + 9
+
+   return JsonResponse({
+       'items': items_data,
+       'has_next': has_next,
+       'next_page': page + 1 if has_next else None
+   })
 

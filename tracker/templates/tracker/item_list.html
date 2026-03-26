@@ -13,24 +13,24 @@
             <div class="btn-group" role="group" aria-label="Фильтр по статусу">
                 <a
                     class="btn btn-sm btn-outline-primary {% if request.GET.status == 'want' %}active{% endif %}"
-                    href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}status=want"
+                    href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if page_obj.number != 1 %}page=1&{% endif %}status=want"
                 >
                     Хочу посетить
                 </a>
                 <a
                     class="btn btn-sm btn-outline-primary {% if request.GET.status == 'done' %}active{% endif %}"
-                    href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}status=done"
+                    href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if page_obj.number != 1 %}page=1&{% endif %}status=done"
                 >
                     Посетил
                 </a>
                 <a
                     class="btn btn-sm btn-outline-primary {% if request.GET.status == 'favorite' %}active{% endif %}"
-                    href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}status=favorite"
+                    href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if page_obj.number != 1 %}page=1&{% endif %}status=favorite"
                 >
                     В избранном
                 </a>
                 {% if request.GET.status or request.GET.search %}
-                    <a class="btn btn-sm btn-outline-secondary" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}{% endif %}">Сбросить</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="?{% if page_obj.number != 1 %}page=1&{% endif %}{% if request.GET.search %}search={{ request.GET.search|urlencode }}{% endif %}">Сбросить</a>
                 {% endif %}
             </div>
         </div>
@@ -107,4 +107,231 @@
             Пока нет элементов для отображения.
         </div>
     {% endif %}
+    
+    {% if is_paginated %}
+        <div class="d-flex justify-content-center mt-4">
+            <button id="load-more-btn" class="btn btn-primary mx-1" data-current-page="{{ page_obj.number }}" data-total-loaded="{{ page_obj.number }}" data-search="{{ request.GET.search|urlencode }}" data-status="{{ request.GET.status }}">
+                Показать больше
+            </button>
+        </div>
+
+        <nav aria-label="Навигация по страницам" class="mt-4">
+            <ul class="pagination justify-content-center flex-wrap" id="pagination-nav">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page=1">Первая</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ page_obj.previous_page_number }}">Предыдущая</a>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ page_obj.next_page_number }}">Следующая</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search|urlencode }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}page={{ page_obj.paginator.num_pages }}">Последняя</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+     <script>
+         document.addEventListener('DOMContentLoaded', function() {
+             const loadMoreBtn = document.getElementById('load-more-btn');
+             const paginationNav = document.getElementById('pagination-nav');
+             const itemsContainer = document.querySelector('.row.row-cols-1.row-cols-md-2');
+
+             console.log('Load more button:', loadMoreBtn);
+             console.log('Items container:', itemsContainer);
+
+             // Build base URL params for pagination links
+             function buildParams(page, search, status) {
+                 const params = new URLSearchParams();
+                 if (search) params.append('search', search);
+                 if (status) params.append('status', status);
+                 params.append('page', page);
+                 return params.toString();
+             }
+
+             // Update pagination links to reflect the virtual page after loading more
+             function updatePaginationState(virtualPage, totalPages, search, status) {
+                 if (!paginationNav) return;
+
+                 const links = paginationNav.querySelectorAll('a.page-link');
+                 const activeSpan = paginationNav.querySelector('span.page-link');
+
+                 // Update active page number display
+                 if (activeSpan) {
+                     activeSpan.textContent = virtualPage;
+                 }
+             }
+
+             // Update URL without page reload
+             function updateURL(page, search, status) {
+                 const newUrl = '?' + buildParams(page, search, status);
+                 window.history.pushState({ page: page, search: search, status: status }, '', newUrl);
+             }
+
+             if (loadMoreBtn) {
+                 loadMoreBtn.addEventListener('click', function() {
+                     const currentPage = parseInt(this.getAttribute('data-current-page'));
+                     const totalLoaded = parseInt(this.getAttribute('data-total-loaded'));
+                     const search = this.getAttribute('data-search');
+                     const status = this.getAttribute('data-status');
+
+                     console.log('Load more clicked:', { currentPage, totalLoaded, search, status });
+
+                     // Show loading state
+                     loadMoreBtn.disabled = true;
+                     loadMoreBtn.textContent = 'Загрузка...';
+
+                     // Load the NEXT page (currentPage + 1)
+                     const nextPage = currentPage + 1;
+
+                     const fetchParams = new URLSearchParams();
+                     fetchParams.append('page', nextPage.toString());
+                     if (search) fetchParams.append('search', search);
+                     if (status) fetchParams.append('status', status);
+
+                     console.log('Fetching:', fetchParams.toString());
+
+                     fetch(`/items/load-more/?${fetchParams.toString()}`, {
+                         headers: {
+                             'X-Requested-With': 'XMLHttpRequest',
+                             'X-CSRFToken': getCookie('csrftoken')
+                         }
+                     })
+                         .then(response => {
+                             console.log('Response status:', response.status);
+                             if (!response.ok) throw new Error('Network error');
+                             return response.json();
+                         })
+                         .then(data => {
+                             console.log('Received data:', data);
+                             if (data.items && data.items.length > 0) {
+                                 // Append new items
+                                 data.items.forEach(item => {
+                                     const colDiv = document.createElement('div');
+                                     colDiv.className = 'col';
+                                     colDiv.innerHTML = `
+                                         <div class="card h-100">
+                                             ${item.image ? '<img src="' + item.image + '" class="card-img-top" alt="' + item.title + '" style="height: 200px; object-fit: cover;">' : ''}
+
+                                             <div class="card-body d-flex flex-column">
+                                                 <h5 class="card-title">
+                                                     <a href="${item.url}">
+                                                         ${item.title}
+                                                     </a>
+                                                 </h5>
+
+                                                 <p class="text-muted mb-2">${item.status}</p>
+
+                                                 <div class="mb-2" aria-label="Рейтинг ${item.rating}/5">
+                                                     <span class="stars">
+                                                         <span class="star ${item.rating >= 1 ? 'filled' : 'empty'}">${item.rating >= 1 ? '★' : '☆'}</span>
+                                                         <span class="star ${item.rating >= 2 ? 'filled' : 'empty'}">${item.rating >= 2 ? '★' : '☆'}</span>
+                                                         <span class="star ${item.rating >= 3 ? 'filled' : 'empty'}">${item.rating >= 3 ? '★' : '☆'}</span>
+                                                         <span class="star ${item.rating >= 4 ? 'filled' : 'empty'}">${item.rating >= 4 ? '★' : '☆'}</span>
+                                                         <span class="star ${item.rating >= 5 ? 'filled' : 'empty'}">${item.rating >= 5 ? '★' : '☆'}</span>
+                                                         <span class="text-muted"> (${item.rating}/5)</span>
+                                                     </span>
+                                                 </div>
+
+                                                 ${item.category ? '<div class="text-muted mb-2">Категория: ' + item.category + '</div>' : ''}
+
+                                                 <div class="mt-auto d-flex gap-2">
+                                                     ${item.update_url ? `
+                                                         <a class="btn btn-sm btn-outline-primary" href="${item.update_url}">
+                                                             Редактировать
+                                                         </a>
+                                                     ` : ''}
+                                                     ${item.delete_url ? `
+                                                         <a class="btn btn-sm btn-outline-danger" href="${item.delete_url}">
+                                                             Удалить
+                                                         </a>
+                                                     ` : ''}
+                                                     <a class="btn btn-sm btn-primary ms-auto" href="${item.url}">
+                                                         Подробнее
+                                                     </a>
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     `;
+                                     itemsContainer.appendChild(colDiv);
+                                 });
+
+                                 // Update state
+                                 const newVirtualPage = totalLoaded + 1;
+                                 loadMoreBtn.setAttribute('data-current-page', nextPage);
+                                 loadMoreBtn.setAttribute('data-total-loaded', newVirtualPage);
+
+                                 // Update URL to reflect virtual page
+                                 updateURL(newVirtualPage, search, status);
+
+                                 // Update pagination navigation
+                                 updatePaginationState(newVirtualPage, data.next_page || newVirtualPage, search, status);
+
+                                 // Hide button if no more items
+                                 if (!data.has_next) {
+                                     loadMoreBtn.style.display = 'none';
+                                 }
+                             } else {
+                                 console.log('No more items to load');
+                                 loadMoreBtn.style.display = 'none';
+                             }
+
+                             // Restore button state
+                             loadMoreBtn.disabled = false;
+                             loadMoreBtn.textContent = 'Показать больше';
+                         })
+                         .catch(error => {
+                             console.error('Ошибка при загрузке дополнительных элементов:', error);
+                             loadMoreBtn.disabled = false;
+                             loadMoreBtn.textContent = 'Показать больше';
+                         });
+                 });
+             }
+
+             // Handle browser back/forward navigation
+             window.addEventListener('popstate', function(event) {
+                 if (event.state && event.state.page) {
+                     // Page will do a full reload with the correct page number
+                     // This is expected behavior for proper URL state
+                 }
+             });
+
+             // CSRF token helper
+             function getCookie(name) {
+                 let cookieValue = null;
+                 if (document.cookie && document.cookie !== '') {
+                     const cookies = document.cookie.split(';');
+                     for (let i = 0; i < cookies.length; i++) {
+                         const cookie = cookies[i].trim();
+                         if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                             cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                             break;
+                         }
+                     }
+                 }
+                 return cookieValue;
+             }
+         });
+     </script>
 {% endblock %}

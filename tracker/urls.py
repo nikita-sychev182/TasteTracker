@@ -7,6 +7,7 @@ from tracker.views import (
     ItemListView,
     ItemUpdateView,
     item_rate_view,
+    load_more_items,
 )
 
 app_name = "tracker"
@@ -19,5 +20,6 @@ urlpatterns = [
     path("items/<int:pk>/rate/", item_rate_view, name="item_rate"),
     path("items/<int:pk>/edit/", ItemUpdateView.as_view(), name="item_update"),
     path("items/<int:pk>/delete/", ItemDeleteView.as_view(), name="item_delete"),
+    path("items/load-more/", load_more_items, name="load_more_items"),
 ]
 
